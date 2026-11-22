@@ -1,0 +1,5 @@
+# OPTIONAL: only if you want to serve the .safetensors checkpoint directly (CLASSIFIER_BACKEND=hf)
+-r requirements.txt
+torch>=2.2
+transformers>=4.40
+safetensors>=0.4
