@@ -1,5 +1,21 @@
 -- Run this once in Supabase: Dashboard -> SQL Editor -> New query -> paste -> Run.
 
+-- ─── Users (team members) ────────────────────────────────────────────────────
+-- Passwords are stored as bcrypt hashes; never plain-text.
+-- Only the backend (service-role key) can access this table.
+create table if not exists public.users (
+  id            bigint generated always as identity primary key,
+  username      text        not null unique check (char_length(username) between 1 and 100),
+  password_hash text        not null,
+  role          text        not null default 'team_member' check (role in ('team_member', 'admin')),
+  created_at    timestamptz not null default now()
+);
+
+alter table public.users enable row level security;
+-- Service-role key bypasses RLS; anon key cannot read or write this table.
+
+-- ─── Tickets ─────────────────────────────────────────────────────────────────
+
 create table if not exists public.tickets (
   id                  bigint generated always as identity primary key,
   name                text        not null check (char_length(name) between 1 and 100),

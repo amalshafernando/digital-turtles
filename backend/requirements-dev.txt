@@ -1,2 +1,4 @@
 -r requirements.txt
 pytest>=8
+pandas>=2.1
+datasets>=2.18

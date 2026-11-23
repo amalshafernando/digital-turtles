@@ -73,3 +73,10 @@ def test_patch_invalid_status_and_404(client, auth):
 def test_low_confidence_becomes_unclear(client, auth):
     client.post("/api/tickets", json={**VALID, "message": "blah blah something strange happened here"})
     assert client.get("/api/tickets", headers=auth).json()[0]["category"] == "UNCLEAR"
+
+
+def test_status_alias_and_plain_health(client, auth):
+    tid = client.post("/api/tickets", json=VALID).json()["id"]
+    r = client.patch(f"/api/tickets/{tid}/status", json={"status": "closed"}, headers=auth)
+    assert r.status_code == 200 and r.json()["status"] == "closed"
+    assert client.get("/health").json() == {"status": "ok"}

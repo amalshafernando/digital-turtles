@@ -1,0 +1,9 @@
+text,true_category
+"cancel my order pls",ORDER
+"how much is the cancelation fee",CANCEL
+"wheres my refnd?? its been 2 wks",REFUND
+"cant login forgot pw",ACCOUNT
+"u charged me twice!!",PAYMENT
+"need invoice for march",INVOICE
+"can i change my adress",SHIPPING
+"talk to a real person",CONTACT

@@ -3,6 +3,7 @@ uvicorn[standard]>=0.29
 pydantic[email]>=2.6
 pydantic-settings>=2.2
 pyjwt>=2.8
+passlib[bcrypt]>=1.7
 supabase>=2.5
 numpy>=1.26
 onnxruntime>=1.17
