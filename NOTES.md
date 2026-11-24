@@ -2,7 +2,11 @@
 
 ## What I built
 
-I built a full-stack Smart Support Desk featuring:
+I built a full-stack Smart Support Desk with ticket classification and AI-assisted reply drafting.
+
+For the ticket classifier, I trained a Logistic Regression baseline with TF-IDF and fine-tuned a DistilBERT model on Google Colab using the customer support dataset. DistilBERT gave the best results and highest accuracy across experiments, so I selected it as the primary model and exported it to ONNX for lightweight runtime serving. All training notebooks, exported models, and experiment codes are available in this Google Drive folder: [Google Drive Folder](https://drive.google.com/drive/folders/1QDKUnNE2QEa7q5nNOda4F5A7fLbmEyOG). In addition, I added a copy of the exact same notebook inside this repository at [`backend/notebook/destilbert-finetune-and-inference.ipynb`](backend/notebook/destilbert-finetune-and-inference.ipynb).
+
+The complete system features:
 - **Frontend:** React + Vite + TypeScript customer portal and protected team dashboard.
 - **Backend:** FastAPI service with structured layers (API routes, services, repositories) and Supabase (Postgres) or in-memory persistence.
 - **ML Ticket Classifier (B1):** DistilBERT fine-tuned on the Bitext dataset and exported to ONNX (with TF-IDF/Logistic Regression as baseline). Evaluated on a leak-free group split and tested on 20 real-style messy inputs.
