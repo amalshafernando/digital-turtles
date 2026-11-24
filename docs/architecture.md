@@ -184,7 +184,7 @@ digital-turtles/
 │   ├── ml/                B1: explore, groups, splits, train, leak_check, eval_messy, colab_train_distilbert
 │   ├── eval/              B3: run_eval, tune_threshold, test_tickets.json
 │   ├── tests/             pytest (API, auth, classifier, drafts, ML pipeline, priority)
-│   ├── data/faq.json      14-entry FAQ (B2 grounding source)
+│   ├── faq/faq.json       14-entry FAQ (B2 grounding source)
 │   ├── models/            model.onnx + tokenizer.json + labels.json (not in repo)
 │   └── docs/ai-mistakes.md
 ├── supabase/schema.sql    tickets + users tables + RLS + trigger

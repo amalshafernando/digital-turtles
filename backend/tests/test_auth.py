@@ -6,7 +6,7 @@ os.environ.update({"REPOSITORY": "memory", "CLASSIFIER_BACKEND": "none", "LLM_PR
                    "TEAM_USER": "agent", "TEAM_PASSWORD": "pw", "JWT_SECRET": "test-secret"})
 
 import pytest
-from app.security import check_credentials, hash_password, make_token
+from app.auth.security import check_credentials, hash_password, make_token
 from app.config import get_settings
 
 

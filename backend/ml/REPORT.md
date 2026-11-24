@@ -21,3 +21,10 @@ hyper-parameters chosen on validation; test scored once. Limit: paraphrases belo
 | # | Text | True | Pred (conf) | Why wrong | What I would do |
 |---|---|---|---|---|---|
 | 1 | | | | | |
+
+
+cd backend
+python -m ml.explore
+python -m ml.train
+python -m ml.leak_check
+python -m ml.eval_messy

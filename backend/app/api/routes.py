@@ -8,7 +8,7 @@ from ..config import Settings, get_settings
 from ..container import Container
 from ..errors import DomainError
 from ..schemas import (LoginRequest, Status, StatusUpdate, TicketCreate, TicketOut, TicketReceipt, TokenOut)
-from ..security import check_credentials, make_token, require_agent
+from ..auth.security import check_credentials, make_token, require_agent
 from ..services.ticket_service import TicketService
 from .deps import get_container_dep, get_ticket_service
 

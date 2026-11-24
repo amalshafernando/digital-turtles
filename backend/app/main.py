@@ -8,6 +8,7 @@ from .api.routes import router
 from .config import Settings, get_settings
 from .container import get_container
 from .errors import install_error_handlers
+from .auth.security import hash_password
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("startup")
@@ -31,7 +32,7 @@ def _seed_team_user(settings: Settings) -> None:
 
     try:
         from supabase import create_client
-        from .security import hash_password
+        from .auth.security import hash_password
 
         client = create_client(settings.supabase_url, settings.supabase_service_key)
         # Check if user already exists (idempotent)

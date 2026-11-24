@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     unclear_below: float = 0.30
 
     # --- FAQ-grounded reply drafts ---
-    faq_path: str = "data/faq.json"
+    faq_path: str = "faq/faq.json"
     faq_min_score: float = 0.20
     llm_provider: Literal["mock", "ollama", "anthropic"] = "mock"
     llm_model: str = ""

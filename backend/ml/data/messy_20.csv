@@ -1,4 +1,4 @@
-text,true_category
+﻿text,true_category
 "cancel my order pls",ORDER
 "how much is the cancelation fee",CANCEL
 "wheres my refnd?? its been 2 wks",REFUND
@@ -7,3 +7,29 @@ text,true_category
 "need invoice for march",INVOICE
 "can i change my adress",SHIPPING
 "talk to a real person",CONTACT
+"my package still aint here,any update?",SHIPPING
+"pls reset my pass,cant get in atm",ACCOUNT
+"why was i billed 2x for the same thing",PAYMENT
+"need to cancle this order asap",ORDER
+"refund not showing yet,pls chk",REFUND
+"can u send the reciept again",INVOICE
+"wrong adress on my order,can u fix it",SHIPPING
+"is there a fee to cancel rn?",CANCEL
+"app keeps loggin me out smh",ACCOUNT
+"my card got decline but money is gone",PAYMENT
+"wanna speak to an actual agent pls",CONTACT
+"where do i find my march bill??",INVOICE
+"can u cancel my subscription before it renews",CANCEL
+"still waiting on my refund,its been 3 weeks now",REFUND
+"cant access my acc even after resetting pw",ACCOUNT
+"got charged for somthing i never ordered",PAYMENT
+"pls send me a copy of my latest invoice",INVOICE
+"package says delivered but i got nothing??",SHIPPING
+"need to update my shipping adress asap",SHIPPING
+"how do i cancel an order thats already placed?",ORDER
+"my payment went thru but order says unpaid",PAYMENT
+"anyone there?? been waiting for support forever",CONTACT
+"forgot my login details,how can i get back in",ACCOUNT
+"can i get a refund for a damaged item pls",REFUND
+"can u pls send me the tracking number again",SHIPPING
+"tracking says delivered but i never got it",REFUND

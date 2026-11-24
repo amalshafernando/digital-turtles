@@ -43,6 +43,58 @@ class AnthropicLLM:
         return "".join(b.text for b in msg.content if b.type == "text")
 
 
+# backend/app/services/llm.py 
+class GroqLLM:
+    """Groq API wrapper using OpenAI-compatible chat completions."""
+
+    def __init__(self, api_key: str, model: str = "llama-3.3-70b-versatile") -> None:
+        self.api_key = api_key
+        self.model = model or "llama-3.3-70b-versatile"
+
+    def complete(self, system: str, user: str) -> str:
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": self.model,
+            "temperature": 0,
+            "response_format": {"type": "json_object"},  # JSON පමණක් output කිරීමට
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+        }
+        r = httpx.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=30.0,
+        )
+        r.raise_for_status()
+        return r.json()["choices"][0]["message"]["content"]
+
+
+def build_llm(
+    provider: str,
+    model: str,
+    ollama_url: str,
+    api_key: str,
+    groq_api_key: str = "",
+) -> LLM:
+    if provider == "groq":
+        if not groq_api_key:
+            raise RuntimeError("LLM_PROVIDER=groq requires GROQ_API_KEY")
+        return GroqLLM(groq_api_key, model)
+    if provider == "ollama":
+        return OllamaLLM(ollama_url, model or "llama3.2:3b")
+    if provider == "anthropic":
+        if not api_key or not model:
+            raise RuntimeError("LLM_PROVIDER=anthropic needs ANTHROPIC_API_KEY and LLM_MODEL")
+        return AnthropicLLM(api_key, model)
+    return MockLLM()
+
+
 def build_llm(provider: str, model: str, ollama_url: str, api_key: str) -> LLM:
     if provider == "ollama":
         return OllamaLLM(ollama_url, model or "llama3.2:3b")

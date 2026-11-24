@@ -18,8 +18,8 @@ import jwt
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from .config import Settings, get_settings
-from .errors import DomainError
+from ..config import Settings, get_settings
+from ..errors import DomainError
 
 _bearer = HTTPBearer(auto_error=False)
 

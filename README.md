@@ -1,18 +1,21 @@
-# digital-turtles
-digital-turtles assignment
-
 # Smart Support Desk
 
 Support-desk web app: React + Vite + TypeScript frontend, FastAPI backend, Supabase (Postgres), a DistilBERT ticket classifier
-(ONNX / safetensors / joblib) and FAQ-grounded AI reply drafts with prompt-injection guards.
+(ONNX / safetensors / joblib), FAQ-grounded AI reply drafts with Groq LLM integration, and Redis Semantic Caching.
 
-Diagrams: `docs/architecture.md`.
+- **Engineering Notes & Tradeoffs:** See [NOTES.md](NOTES.md) for design choices, evaluation results, AI verification, and scaling notes.
+- **Architecture Diagrams:** See [docs/architecture.md](docs/architecture.md).
 
-## Quick start (2 commands)
+## Quick start (Single Command)
 ```bash
-cp .env.example .env        # fill SUPABASE_URL, SUPABASE_SERVICE_KEY, TEAM_PASSWORD, JWT_SECRET (see "Supabase" below)
+cp .env.example .env        # fill GROQ_API_KEY (or use mock), and Supabase/memory credentials
 docker compose up --build   # app: http://localhost:8080   team page: http://localhost:8080/team   API docs: http://localhost:8000/docs
 ```
+This builds and starts the whole stack in a single command:
+1. **Frontend:** React + Vite SPA served via Nginx on port `8080` (with `/api/` reverse proxy).
+2. **Backend:** FastAPI service on port `8000` with the DistilBERT ONNX classifier and FAQ draft service.
+3. **Redis:** Caching service on port `6379` for semantic cache hits to minimize LLM cost.
+
 Team login = `TEAM_USER` / `TEAM_PASSWORD` from `.env`. Put your model files in `backend/models/` first (see "Model files").
 
 ## Without Docker
@@ -40,7 +43,7 @@ backend/app/services/    ticket_service, classification_service, classifier/* (o
 backend/app/repositories supabase_repo, memory_repo (persistence port)
 backend/app/textclean.py the ONE text-cleaning function for training and serving
 backend/ml/              B1: explore, groups, splits, train (TF-IDF baseline), colab_train_distilbert, leak_check, eval_messy, REPORT.md
-backend/data/faq.json    the FAQ the drafts are grounded in
+backend/faq/faq.json     the FAQ the drafts are grounded in
 backend/eval/            B3: run_eval, tune_threshold, test_tickets.json
 backend/tests/           API, validation, drafts, classifier loading, ML pipeline
 supabase/schema.sql      database schema
@@ -69,13 +72,16 @@ DistilBERT: run `ml/colab_train_distilbert.py` in Colab (same split, so scores a
 `ml/data/messy_20.csv` has 8 starter rows: **write the other 12 yourself, before running the model.**
 
 ## AI drafts (B2 / B3)
-Retrieval gate (no FAQ above `FAQ_MIN_SCORE` => fixed "no matching FAQ" text, LLM not called) -> prompt rules (ticket text is untrusted data) ->
+Retrieval gate (no FAQ above `FAQ_MIN_SCORE` => fixed "no matching FAQ" text, LLM not called) -> Redis semantic cache check (cuts latency and token cost for recurring queries) -> prompt rules (ticket text is untrusted data) ->
 output guards (valid JSON, cited ids must be retrieved ids, no "refund approved" claims) -> human review in the UI. Injection phrases are stripped from the retrieval query and flagged to the agent.
 ```bash
 python -m eval.tune_threshold   # choose FAQ_MIN_SCORE from data
 python -m eval.run_eval         # 10 test tickets -> eval/results.md (use a REAL LLM; mock only echoes the FAQ). Fill the verdict/reason columns by hand.
 ```
-`LLM_PROVIDER=ollama` (`docker compose --profile llm up`) or `anthropic` (needs `LLM_MODEL` + `ANTHROPIC_API_KEY`).
+- `LLM_PROVIDER=groq`: Fastest, cost-effective inference (`GROQ_API_KEY` + `LLM_MODEL=llama-3.3-70b-versatile`).
+- `LLM_PROVIDER=ollama`: Local model support (`docker compose --profile llm up`).
+- `LLM_PROVIDER=anthropic`: Claude model support (`LLM_MODEL` + `ANTHROPIC_API_KEY`).
+- `LLM_PROVIDER=mock`: Deterministic key-free mock for tests.
 
 ## Tests
 ```bash

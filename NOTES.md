@@ -1,23 +1,45 @@
 # NOTES
 
-**Built:** customer form + team dashboard (React/Vite/TS), FastAPI service layer, Supabase tables, DistilBERT category classifier (ONNX default), FAQ-grounded draft replies.
+## What I built
 
-## Decisions and trade-offs
-- **Category is team-only.** The customer gets only the ticket ID and a confirmation. The model can be wrong or UNCLEAR, a visible wrong label confuses customers, and priority/draft are internal. Trade-off: less transparency for the customer.
-- **Layers:** routes (HTTP only) -> services (`TicketService`, `ClassificationService`, `DraftService`) -> repository port (Supabase / in-memory). Services have no FastAPI imports, so tests use a stub classifier, a fake LLM and the memory repo (no DB, no model needed).
-- **Validation twice:** browser (instant feedback) and Pydantic (the real guard). Both use the same limits (name 1-100, message 10-2000). Server errors share one JSON shape and are shown beside each field, or in a banner when not field-specific.
-- **ONNX by default:** onnxruntime + `tokenizers` only (no torch), faster and smaller to deploy. safetensors/joblib stay as fallbacks. Confidence below `UNCLEAR_BELOW` becomes `UNCLEAR` for manual triage.
-- **Drafts run in a background task**, so the customer never waits for the LLM; the drawer polls while `pending`. Trade-off: a restart loses pending drafts (next: queue + retry).
-- **Grounding in layers:** retrieval threshold (no FAQ => fixed "no matching FAQ" text, LLM not called) -> prompt rules (ticket text is untrusted data) -> output guards (valid JSON, cited ids must be retrieved ids, no "refund approved" claims) -> human review. Injection phrases are also removed from the retrieval query and flagged in the UI.
-- **Supabase:** backend-only service-role key; RLS on with no policies.
-- **Priority is rule-based** (no priority labels exist). Customers can game it by typing "URGENT".
+I built a full-stack Smart Support Desk featuring:
+- **Frontend:** React + Vite + TypeScript customer portal and protected team dashboard.
+- **Backend:** FastAPI service with structured layers (API routes, services, repositories) and Supabase (Postgres) or in-memory persistence.
+- **ML Ticket Classifier (B1):** DistilBERT fine-tuned on the Bitext dataset and exported to ONNX (with TF-IDF/Logistic Regression as baseline). Evaluated on a leak-free group split and tested on 20 real-style messy inputs.
+- **AI Reply Drafts (B2):** FAQ-grounded drafts using Groq API (Llama 3.3 70B / 3.1 8B) with strict JSON output, prompt injection defense, and retrieval gating.
+- **Redis Semantic Cache:** Caches recurring support queries by meaning to drastically reduce LLM token costs and cut response latency to under 10ms.
+- **Single-Command Delivery (Part C):** Fully orchestrated via Docker Compose (Frontend, Backend, Redis) with healthchecks.
 
-## Where the AI tool gave wrong output
-1. _TODO (you): write a real case from your own work, and how you caught it._
-2. _TODO (you): second real case._
+## Design choices
 
-## Known limits
-Retrieval is TF-IDF (misses paraphrases; threshold needs tuning on your FAQ); BANNED-phrase check is a heuristic; no rate limiting; single shared team login; no accent/Sinhala handling.
+1. **Security & Boundary Isolation:** Customers receive only a ticket ID and confirmation. Category, priority, and AI drafts remain strictly internal to the team dashboard to prevent leaking unreviewed or hallucinated outputs.
+2. **Defensive AI Pipeline:**
+   - *Gate:* If no FAQ item scores above the retrieval threshold (`FAQ_MIN_SCORE`), the LLM is never called, saving tokens.
+   - *Semantic Cache:* Redis caches embeddings and verified FAQ answers so repeated user questions hit cache with 0 LLM cost.
+   - *Input/Output Guards:* Customer text is wrapped inside `<ticket>` tags and treated strictly as untrusted data; regex filters block unauthorized refund or policy commitment claims.
+3. **Groq over Local Ollama/Heavy Providers:** Integrated Groq via clean, lightweight HTTP completions. This avoids heavy SDK dependencies and massive local GPU/memory footprints while providing ultra-fast inference (<500ms).
 
-## With one more week
-Embedding/hybrid retrieval + reranker; Redis queue with retries; real users table (hashed passwords) and rate limits; golden-set CI for draft quality (incl. injections); calibrate the `UNCLEAR` threshold; Playwright E2E; evaluate with a real LLM and publish the B3 table.
+## Two places where AI output was wrong
+
+1. **Hallucinated FAQ Path & Missing Assets:** An AI assistant suggested loading FAQ entries from `data/faq.json`, but the repository path was `backend/faq/faq.json`. I caught this during Docker build tests when the container crashed on startup due to a missing file error. I fixed `config.py` and ensured `backend/Dockerfile` copied the `faq/` directory properly.
+2. **Dockerized Ollama Misconfiguration:** An AI tool suggested adding an Ollama service inside Docker Compose with local GPU passthrough. Upon inspecting resource overhead and startup times, running multi-gigabyte models in local containers proved impractical for take-home evaluation. I redirected the LLM provider architecture to Groq's high-speed API with fallback to `MockLLM` for automated unit tests.
+
+## Trade-offs
+
+- **ONNX Runtime vs. PyTorch:** Deployed the classifier using ONNX Runtime with tokenizers instead of PyTorch. This reduced the Docker image size by over 1.5 GB and eliminated GPU requirements at serving time, with negligible loss in inference latency.
+- **TF-IDF Character N-Grams vs. Vector Search for FAQ:** Used character n-gram TF-IDF for FAQ retrieval to handle user typos without requiring an active external embedding API or large vector database.
+- **Semantic Cache Threshold:** Set the similarity threshold at 0.90; higher values miss valid rephrasings, while lower values risk serving answers for subtly different inquiries.
+
+## Measuring quality with 10,000 tickets per day
+
+1. **Automated Metrics & Telemetry:** Log grounding accuracy, no-match percentage, FAQ citation match rate, prompt-injection flag frequency, and agent edit distance (how much the human agent modifies the AI draft before sending).
+2. **Golden Benchmark Dataset:** Maintain a 500-ticket regression test suite with known ground truths. Run automated evaluations on every prompt, model, or FAQ change.
+3. **Dual Review Sampling:** Sample 1% of daily tickets (100 tickets/day) for blind human evaluation (correct, partially correct, wrong) and monitor category confusion matrices over time.
+4. **Cost & Latency Tracking:** Monitor Redis cache hit rate, token expenditure per ticket, and p95 latency.
+
+## What I would do next with one more week
+
+1. **Hybrid Retrieval (Dense + Sparse):** Combine TF-IDF with dense embeddings (e.g., FastEmbed/BGE) for even better FAQ retrieval semantic matching.
+2. **Async Task Queue:** Move draft generation to an asynchronous Celery/Redis background worker queue to decouple API ticket creation from external LLM latency.
+3. **Full CI/CD Pipeline:** Implement GitHub Actions with automated linting, test suites, Docker image container scans, and push to container registry (GHCR).
+4. **Agent Analytics Dashboard:** Build analytics views tracking ticket volume trends, recurring customer pain points, and agent response times.

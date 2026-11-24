@@ -37,3 +37,4 @@ o	Token එක valid නැතිනම් හෝ expire වී ඇත්නම�
 4. Assessment Context සඳහා Practical Note (Timebox & Trade-off)
 •	මෙම take-home task එක පැය 4–5ක කාලයකට සීමා වන බැවින්, FastAPI + PyJWT (or python-jose) + passlib/pwdlib සමඟ සරල, පැහැදිලි JWT login flow එකක් සෑදීම ඉතා සුදුසුය (refresh tokens, OAuth2 providers, හෝ complex RBAC වැනි අමතර දේවලට වැඩි කාලයක් වැය නොකර). 
 
+වැරදි අනාවැකි 5ක්: text, true label, prediction + confidence, ඇයි වැරදිද, ඊළඟට මොකද කරන්නේ. මේවා ඔබේ වචනවලින්.

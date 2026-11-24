@@ -65,8 +65,11 @@ def _parse(raw: str) -> dict:
 
 
 class DraftService:
-    def __init__(self, retriever: FaqRetriever, llm: LLM, min_score: float) -> None:
-        self.retriever, self.llm, self.min_score = retriever, llm, min_score
+    def __init__(self, retriever: FaqRetriever, llm: LLM, min_score: float, cache=None) -> None:
+        self.retriever = retriever
+        self.llm = llm
+        self.min_score = min_score
+        self.cache = cache
 
     def _no_match(self, note: str, flags: list[str]) -> Draft:
         return Draft(NO_MATCH_TEXT, [], "no_match", flags, note)
@@ -78,6 +81,19 @@ class DraftService:
         hits = [h for h in self.retriever.search(query, k=3) if h.score >= self.min_score]
         if not hits:
             return self._no_match("below_threshold", flags)          # LLM never called
+
+        # Check semantic cache if available
+        if self.cache is not None:
+            cached_draft = self.cache.get(ticket_text)
+            if cached_draft:
+                cache_flags = list(flags) + ["semantic_cache_hit"]
+                return Draft(
+                    text=cached_draft.get("answer"),
+                    sources=cached_draft.get("sources", []),
+                    status="ready",
+                    flags=cache_flags,
+                )
+
         try:
             data = _parse(self.llm.complete(SYSTEM_PROMPT, build_user_prompt(hits, ticket_text)))
         except Exception as e:  # noqa: BLE001
@@ -94,4 +110,9 @@ class DraftService:
             return self._no_match("unknown_faq_id", flags)
         sources = [{"id": i, "title": allowed[i].title, "score": round(allowed[i].score, 3)}
                    for i in dict.fromkeys(ids)]
+
+        # Cache valid response if cache is configured
+        if self.cache is not None:
+            self.cache.set(ticket_text, {"answer": answer.strip(), "sources": sources})
+
         return Draft(answer.strip(), sources, "ready", flags)
