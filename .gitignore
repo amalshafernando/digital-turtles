@@ -222,6 +222,6 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 APEX_LABS_Engineer_Assessment_Candidate.md
-backend/models
+#backend/models
 manual.pdf
 manual.md
