@@ -9,6 +9,17 @@ on:
 jobs:
   test-backend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      REPOSITORY: memory
+      CLASSIFIER_BACKEND: none
+      LLM_PROVIDER: mock
+      TEAM_USER: agent
+      TEAM_PASSWORD: pw
+      JWT_SECRET: ci-test-secret
+
     steps:
       - uses: actions/checkout@v4
 
@@ -17,20 +28,22 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: backend/requirements*.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements.txt
-          pip install -r backend/requirements-dev.txt
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
 
-      - name: Run Pytest & ML Checks
-        run: |
-          cd backend
-          pytest tests/ -v
+      - name: Run Pytest
+        run: pytest tests/ -v
 
   test-frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
 
@@ -43,7 +56,6 @@ jobs:
 
       - name: Install & Build Frontend
         run: |
-          cd frontend
           npm ci
           npm run build
 
@@ -57,5 +69,4 @@ jobs:
         uses: actions/setup-buildx-action@v3
 
       - name: Build Docker Compose Services
-        run: |
-          docker compose build
+        run: docker compose build
