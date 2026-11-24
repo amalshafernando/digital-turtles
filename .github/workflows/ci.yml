@@ -19,6 +19,7 @@ jobs:
       TEAM_USER: agent
       TEAM_PASSWORD: pw
       JWT_SECRET: ci-test-secret
+      PYTHONPATH: .
 
     steps:
       - uses: actions/checkout@v4
